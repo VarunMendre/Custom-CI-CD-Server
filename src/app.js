@@ -1,7 +1,6 @@
 /**
-Express config
-JSON parsing
-Routes mounting
+ * Express app configuration
+ * Middlewares + routes
  */
 
 import express from "express";

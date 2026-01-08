@@ -1,20 +1,14 @@
 /**
-Starts Express
-Loads dotenv
-Starts listening
+ * Entry point
+ * Loads env
+ * Starts HTTP server
  */
 
-import express from "express";
-
-const app = express();
-
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", service: "cicd-server" });
-});
+import "dotenv/config";
+import app from "./app.js";
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`CI/CD server running on port ${PORT}`);
 });
-
