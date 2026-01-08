@@ -1,3 +1,9 @@
+/**
+Express config
+JSON parsing
+Routes mounting
+ */
+
 import express from "express";
 import healthRouter from "./routes/health.route.js";
 

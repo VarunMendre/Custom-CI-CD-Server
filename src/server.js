@@ -1,3 +1,9 @@
+/**
+Starts Express
+Loads dotenv
+Starts listening
+ */
+
 import express from "express";
 
 const app = express();

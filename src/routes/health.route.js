@@ -1,3 +1,13 @@
+/**
+/health
+
+Used by:
+
+- You
+- NGINX
+- Monitoring
+- Telegram pings
+ */
 import { Router } from "express";
 
 const router = Router();
