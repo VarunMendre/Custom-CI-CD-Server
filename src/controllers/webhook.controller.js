@@ -31,8 +31,8 @@ export const webhookController = async (req, res) => {
     );
 
     console.log("🧠 Change Detection Result:");
-    console.log("Frontend:", frontendChanged ? "YES" : "NO");
-    console.log("Backend :", backendChanged ? "YES" : "NO");
+    console.log("Frontend:", frontendChanges ? "YES" : "NO");
+    console.log("Backend :", backendChanges ? "YES" : "NO");
 
     console.log("📂 Files changed:");
     changedFiles.forEach((file) => console.log(" -", file));
