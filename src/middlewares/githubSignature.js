@@ -12,23 +12,20 @@ export const gitHubSignature = (req, res, next) => {
     return res.status(401).json({ message: "Missing GitHub signature" });
   }
 
-  const expectedSignature =
-    "sha256=" +
-    crypto
-      .createHmac("sha256", process.env.GITHUB_WEBHOOK_SECRET)
-      .update(JSON.stringify(req.body))
-      .digest("hex");
+  const hmac = crypto.createHmac("sha256", process.env.GITHUB_WEBHOOK_SECRET);
+
+  const digest = "sha256=" + hmac.update(req.rawBody).digest("hex");
 
   const sigBuffer = Buffer.from(signature);
-  const expectedBuffer = Buffer.from(expectedSignature);
+  const digestBuffer = Buffer.from(digest);
 
-  if (sigBuffer.length !== expectedBuffer.length) {
-    return res.status(401).json({ message: "Invalid signature" });
-  }
-
-  if (!crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+  if (
+    sigBuffer.length !== digestBuffer.length ||
+    !crypto.timingSafeEqual(sigBuffer, digestBuffer)
+  ) {
     return res.status(401).json({ message: "Invalid signature" });
   }
 
   next();
 };
+
