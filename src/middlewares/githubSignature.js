@@ -6,9 +6,11 @@
 import crypto from "crypto";
 
 export const gitHubSignature = (req, res, next) => {
+  console.log("🔥 Webhook hit");
   const signature = req.headers["x-hub-signature-256"];
 
   if (!signature) {
+    console.log("❌ No signature header");
     return res.status(401).json({ message: "Missing GitHub signature" });
   }
 
@@ -23,9 +25,9 @@ export const gitHubSignature = (req, res, next) => {
     sigBuffer.length !== digestBuffer.length ||
     !crypto.timingSafeEqual(sigBuffer, digestBuffer)
   ) {
+    console.log("❌ Signature mismatch");
     return res.status(401).json({ message: "Invalid signature" });
   }
-
+  console.log("✅ Signature verified");
   next();
 };
-
