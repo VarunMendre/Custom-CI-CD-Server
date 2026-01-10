@@ -23,11 +23,12 @@ export const webhookController = async (req, res) => {
     const event = req.headers["x-github-event"];
     const payload = req.body;
 
-    // Respond immediately to GitHub (VERY IMPORTANT)
+    // ✅ Respond immediately to GitHub (CRITICAL)
     res.status(200).json({ message: "Webhook received" });
 
+    // Ignore non-push events
     if (event !== "push") {
-      console.log("Ignored event:", event);
+      console.log("⚠️ Ignored event:", event);
       return;
     }
 
@@ -42,14 +43,18 @@ export const webhookController = async (req, res) => {
     console.log("📂 Files changed:");
     changedFiles.forEach((file) => console.log(" -", file));
 
-    // 🚀 Deployment execution
+    // 🚀 Trigger deployments
     if (frontendChanges) {
+      console.log("🚀 Triggering Frontend Deployment...");
       await deployFrontend();
     }
 
     if (backendChanges) {
+      console.log("🚀 Triggering Backend Deployment...");
       await deployBackend();
     }
+
+    console.log("✅ Webhook processing completed");
   } catch (error) {
     console.error("❌ Webhook processing failed:", error);
   }
