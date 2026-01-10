@@ -1,24 +1,29 @@
 /**
  * Reads webhook payload
-Extracts:
-- repo name
-- changed files
-
-Decides:
-- FE?
-- BE?
-- BOTH?
+ * Extracts:
+ * - repo name
+ * - changed files
+ *
+ * Decides:
+ * - FE?
+ * - BE?
+ * - BOTH?
+ *
+ * Triggers:
+ * - FE deploy
+ * - BE deploy
  */
 
 import { detectChanges } from "../utils/changeDetector.js";
+import { deployFrontend } from "../services/deployFrontend.js";
+import { deployBackend } from "../services/deployBackend.js";
 
 export const webhookController = async (req, res) => {
   try {
     const event = req.headers["x-github-event"];
     const payload = req.body;
 
-    // response immediately to github
-
+    // Respond immediately to GitHub (VERY IMPORTANT)
     res.status(200).json({ message: "Webhook received" });
 
     if (event !== "push") {
@@ -36,6 +41,15 @@ export const webhookController = async (req, res) => {
 
     console.log("📂 Files changed:");
     changedFiles.forEach((file) => console.log(" -", file));
+
+    // 🚀 Deployment execution
+    if (frontendChanges) {
+      await deployFrontend();
+    }
+
+    if (backendChanges) {
+      await deployBackend();
+    }
   } catch (error) {
     console.error("❌ Webhook processing failed:", error);
   }
