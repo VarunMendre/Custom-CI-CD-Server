@@ -3,5 +3,5 @@ export const frontendConfig = {
   buildCommand: "npm run build",
   distDir: "dist",
   s3Bucket: "s3://storageapp-frontend-s3-bucket",
-  cloudfrontDistributionId: "YOUR_CF_ID_HERE",
+  cloudfrontDistributionId: "E3FVNJY6OALVUD",
 };
