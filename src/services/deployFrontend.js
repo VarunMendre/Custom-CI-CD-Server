@@ -10,7 +10,7 @@ export const deployFrontend = async () => {
     distDir,
     s3Bucket,
     cloudfrontDistributionId,
-    envVars, // 👈 IMPORTANT
+    envVars,
   } = frontendConfig;
 
   console.log("🚀 Starting frontend deployment");
@@ -56,7 +56,7 @@ const runCommand = (cmd, args, cwd) =>
     const child = spawn(cmd, args, {
       cwd,
       stdio: "inherit",
-      shell: true,
+      shell: true, // required for aws, npm, git
     });
 
     child.on("close", (code) => {
