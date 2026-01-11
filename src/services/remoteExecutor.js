@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 
-const DEPLOY_SERVER = "ubuntu@3.7.31.7";
+const DEPLOY_SERVER = "ubuntu@13.127.51.250";
 
 const COMMANDS = {
   backend: "nohup bash /home/ubuntu/deploy-backend.sh > be.log 2>&1 &",
