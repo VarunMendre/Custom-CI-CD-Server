@@ -1,15 +1,4 @@
-/**
- * Entry point
- * Loads env
- * Starts HTTP server
- */
-
-import path from "path";
-import dotenv from "dotenv";
-
-// Load .env from project root
-dotenv.config({ path: path.join(process.cwd(), ".env") });
-
+import "./config.js";
 import app from "./app.js";
 
 const PORT = process.env.PORT || 3000;
