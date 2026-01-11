@@ -1,14 +1,14 @@
-/**
- * /github-webhook
- * Entry point for GitHub webhook events
- */
-
 import { Router } from "express";
 import { gitHubSignature } from "../middlewares/githubSignature.js";
-import { webhookController } from "../controllers/webhook.controller.js";
+import { frontendWebhook } from "../controllers/frontend.js";
+import { backendWebhook } from "../controllers/backend.js";
 
 const router = Router();
 
-router.post("/", gitHubSignature, webhookController);
+// frontend repo webhook
+router.post("/frontend", gitHubSignature, frontendWebhook);
+
+// backend repo webhook
+router.post("/backend", gitHubSignature, backendWebhook);
 
 export default router;

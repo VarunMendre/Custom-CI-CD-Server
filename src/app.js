@@ -1,8 +1,3 @@
-/**
- * Express app configuration
- * Middlewares + routes
- */
-
 import express from "express";
 import healthRouter from "./routes/health.route.js";
 import webhookRouter from "./routes/webhook.route.js";
@@ -16,6 +11,7 @@ app.use(
     },
   })
 );
+
 app.use("/health", healthRouter);
 app.use("/github-webhook", webhookRouter);
 
