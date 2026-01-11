@@ -1,28 +1,27 @@
 import { spawn } from "child_process";
 
-const SERVERS = {
-  frontend: {
-    host: "ubuntu@13.127.210.98",
-    script: "/home/ubuntu/scripts/deploy-frontend.sh",
-  },
-  backend: {
-    host: "ubuntu@13.127.210.98",
-    script: "/home/ubuntu/scripts/deploy-backend.sh",
-  },
+const DEPLOY_SERVER = "ubuntu@13.204.246.118"; // your deploy EC2
+
+const COMMANDS = {
+  frontend: "nohup bash /home/ubuntu/deploy-frontend.sh > fe.log 2>&1 &",
+  backend: "nohup bash /home/ubuntu/deploy-backend.sh > be.log 2>&1 &",
+  both: `
+    nohup bash /home/ubuntu/deploy-backend.sh > be.log 2>&1 &
+    nohup bash /home/ubuntu/deploy-frontend.sh > fe.log 2>&1 &
+  `,
 };
 
-export const runRemoteCommand = (type) =>
-  new Promise((resolve, reject) => {
-    const server = SERVERS[type];
+export const triggerRemoteDeploy = (type) => {
+  console.log(`🚀 Triggering ${type.toUpperCase()} deployment`);
 
-    const ssh = spawn(
-      "ssh",
-      ["-o", "StrictHostKeyChecking=no", server.host, `bash ${server.script}`],
-      { stdio: "inherit" }
-    );
+  const ssh = spawn(
+    "ssh",
+    ["-o", "StrictHostKeyChecking=no", DEPLOY_SERVER, COMMANDS[type]],
+    {
+      detached: true,
+      stdio: "ignore",
+    }
+  );
 
-    ssh.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`${type} deploy failed`));
-    });
-  });
+  ssh.unref(); // 🔥 THIS PREVENTS FREEZE
+};
