@@ -1,5 +1,13 @@
 import { detectChanges } from "../utils/changeDetector.js";
 import { triggerRemoteDeploy } from "../services/remoteExecutor.js";
+import { exec } from "child_process";
+
+const buildFrontend = () => {
+  exec("bash /home/ubuntu/frontend-builder/deploy-frontend.sh", (err) => {
+    if (err) console.error("❌ Frontend build failed");
+    else console.log("✅ Frontend deployed");
+  });
+};
 
 export const webhookController = async (req, res) => {
   res.status(200).json({ message: "Webhook received" });
@@ -8,15 +16,6 @@ export const webhookController = async (req, res) => {
 
   const { frontendChanges, backendChanges } = detectChanges(req.body.commits);
 
-  console.log("🧠 Change Detection Result:");
-  console.log("Frontend:", frontendChanges);
-  console.log("Backend :", backendChanges);
-
-  if (frontendChanges && backendChanges) {
-    triggerRemoteDeploy("both");
-  } else if (frontendChanges) {
-    triggerRemoteDeploy("frontend");
-  } else if (backendChanges) {
-    triggerRemoteDeploy("backend");
-  }
+  if (frontendChanges) buildFrontend();
+  if (backendChanges) triggerRemoteDeploy("backend");
 };

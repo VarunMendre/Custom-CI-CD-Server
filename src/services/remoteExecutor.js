@@ -1,27 +1,21 @@
 import { spawn } from "child_process";
 
-const DEPLOY_SERVER = "ubuntu@13.204.246.118"; // your deploy EC2
+const DEPLOY_SERVER = "ubuntu@3.7.31.7";
 
 const COMMANDS = {
-  frontend: "nohup bash /home/ubuntu/deploy-frontend.sh > fe.log 2>&1 &",
   backend: "nohup bash /home/ubuntu/deploy-backend.sh > be.log 2>&1 &",
-  both: `
-    nohup bash /home/ubuntu/deploy-backend.sh > be.log 2>&1 &
-    nohup bash /home/ubuntu/deploy-frontend.sh > fe.log 2>&1 &
-  `,
 };
 
 export const triggerRemoteDeploy = (type) => {
-  console.log(`🚀 Triggering ${type.toUpperCase()} deployment`);
+  if (type !== "backend") return;
+
+  console.log("🚀 Triggering BACKEND deployment");
 
   const ssh = spawn(
     "ssh",
-    ["-o", "StrictHostKeyChecking=no", DEPLOY_SERVER, COMMANDS[type]],
-    {
-      detached: true,
-      stdio: "ignore",
-    }
+    ["-o", "StrictHostKeyChecking=no", DEPLOY_SERVER, COMMANDS.backend],
+    { detached: true, stdio: "ignore" }
   );
 
-  ssh.unref(); // 🔥 THIS PREVENTS FREEZE
+  ssh.unref();
 };
