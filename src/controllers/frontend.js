@@ -9,8 +9,8 @@ export const frontendWebhook = (req, res) => {
 
   console.log(`🔥 Frontend webhook received: ${branch} - ${commitMsg} by ${author}`);
 
-  const deployUser = process.env.DEPLOY_SERVER_USER || "ubuntu";
-  const deployIp = process.env.DEPLOY_SERVER_IP || "13.127.51.250";
+  const deployUser = process.env.DEPLOY_SERVER_USER;
+  const deployIp = process.env.DEPLOY_SERVER_IP;
 
   // Initial notification
   sendTelegramMessage(

@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 
-const DEPLOY_USER = "ubuntu";
-const DEPLOY_HOST = "13.202.240.78"; // your deploy EC2 PUBLIC IP
+const DEPLOY_USER = process.env.DEPLOY_SERVER_USER;
+const DEPLOY_HOST = process.env.DEPLOY_SERVER_IP;
 
 function run(command) {
   return new Promise((resolve, reject) => {
