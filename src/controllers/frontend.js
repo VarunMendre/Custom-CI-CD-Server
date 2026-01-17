@@ -34,12 +34,17 @@ export const frontendWebhook = (req, res) => {
 
       if (err) {
         console.error("❌ Frontend deploy failed:", stderr);
+
+        // Check if our script triggered a rollback
+        const isRollback = stdout.includes("Rollback Complete");
+        const statusText = isRollback 
+          ? `🛡️ *Auto-Rollback:* ✅ SUCCESS (Site restored to previous version)` 
+          : `⚠️ *Status:* FAILED (Manual intervention required)`;
+
         await sendTelegramMessage(
           `🔴 *Frontend Deployment Failed*\n\n` +
-          `🧩 *Service:* Frontend Web\n` +
-          `📦 *Repository:* ${repoName}\n` +
-          `⏱ *Duration:* ${duration}s\n` +
-          `❌ *Error:* \`${stderr || err.message}\``
+            `❌ *Error:* \`${stderr || err.message || "Script failed"}\`\n\n` +
+            `${statusText}`
         );
         return res.status(500).send("Frontend deploy failed");
       }
