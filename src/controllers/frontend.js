@@ -1,5 +1,6 @@
 import { exec } from "child_process";
 import { sendTelegramMessage } from "../services/telegram.service.js";
+import { verifyHealth } from "../utils/healthCheck.js";
 
 export const frontendWebhook = (req, res) => {
   const { ref, head_commit, repository } = req.body;
@@ -15,14 +16,15 @@ export const frontendWebhook = (req, res) => {
   const deployUser = process.env.DEPLOY_SERVER_USER;
   const deployIp = process.env.DEPLOY_SERVER_IP;
   const startTime = Date.now();
+  const targetUrl = "https://cloudvault.cloud";
 
   // Initial notification
   sendTelegramMessage(
     `🚀 *Frontend Deployment Started*\n\n` +
-      `📦 *Repository:* ${repoName}\n` +
-      `🌿 *Branch:* \`${branch}\`\n` +
-      `✍️ *Author:* ${author}\n` +
-      `📝 *Message:* ${commitMsg}`
+    `📦 *Repository:* ${repoName}\n` +
+    `🌿 *Branch:* \`${branch}\`\n` +
+    `✍️ *Author:* ${author}\n` +
+    `📝 *Message:* ${commitMsg}`
   );
 
   exec(
@@ -34,18 +36,23 @@ export const frontendWebhook = (req, res) => {
         console.error("❌ Frontend deploy failed:", stderr);
         await sendTelegramMessage(
           `🔴 *Frontend Deployment Failed*\n\n` +
-            `🧩 *Service:* Frontend Web\n` +
-            `📦 *Repository:* ${repoName}\n` +
-            `⏱ *Duration:* ${duration}s\n` +
-            `❌ *Error:* \`${stderr || err.message}\``
+          `🧩 *Service:* Frontend Web\n` +
+          `📦 *Repository:* ${repoName}\n` +
+          `⏱ *Duration:* ${duration}s\n` +
+          `❌ *Error:* \`${stderr || err.message}\``
         );
         return res.status(500).send("Frontend deploy failed");
       }
 
-      console.log("✅ Frontend deployed:", stdout);
+      console.log("✅ Frontend script executed, verifying health...");
 
-      await sendTelegramMessage(
-        `🚀 *Deployment Successful*\n\n` +
+      try {
+        await verifyHealth(targetUrl); // Verify deployment
+
+        console.log("✅ Frontend deployed and healthy:", stdout);
+
+        await sendTelegramMessage(
+          `🚀 *Deployment Successful*\n\n` +
           `🧩 *Service:* Frontend Web\n` +
           `🌍 *Environment:* Production\n` +
           `🖥 *Server:* EC2 (${deployIp})\n\n` +
@@ -55,10 +62,22 @@ export const frontendWebhook = (req, res) => {
           `✍️ *Author:* ${author}\n` +
           `📝 *Message:* ${commitMsg}\n\n` +
           `⏱ *Duration:* ${duration}s\n` +
-          `❤️ *Health Check:* [cloudvault.cloud](https://cloudvault.cloud) → 200 OK\n\n` +
+          `❤️ *Health Check:* [cloudvault.cloud](${targetUrl}) → 200 OK\n\n` +
           `🟢 *Status:* LIVE`
-      );
-      res.send("✅ Frontend deployed");
+        );
+        res.send("✅ Frontend deployed and healthy");
+
+      } catch (healthError) {
+        console.error("❌ Frontend health check failed:", healthError.message);
+        await sendTelegramMessage(
+          `🔴 *Frontend Deployment Verified Failed*\n\n` +
+          `🧩 *Service:* Frontend Web\n` +
+          `📦 *Repository:* ${repoName}\n` +
+          `⏱ *Duration:* ${duration}s\n` +
+          `❌ *Error:* Health check failed.\nApp deployed but not responding at ${targetUrl}.`
+        );
+        res.status(500).send("Deployed but health check failed");
+      }
     }
   );
 };

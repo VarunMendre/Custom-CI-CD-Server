@@ -1,5 +1,6 @@
 import { exec } from "child_process";
 import { sendTelegramMessage } from "../services/telegram.service.js";
+import { verifyHealth } from "../utils/healthCheck.js";
 
 export const backendWebhook = (req, res) => {
   const { ref, head_commit, repository } = req.body;
@@ -15,6 +16,7 @@ export const backendWebhook = (req, res) => {
   const deployUser = process.env.DEPLOY_SERVER_USER;
   const deployIp = process.env.DEPLOY_SERVER_IP;
   const startTime = Date.now();
+  const targetUrl = "https://api.cloudvault.cloud/"; // Checking root 
 
   // Initial notification
   sendTelegramMessage(
@@ -42,23 +44,40 @@ export const backendWebhook = (req, res) => {
         return res.status(500).send("Backend deploy failed");
       }
 
-      console.log("✅ Backend deployed:", stdout);
+      console.log("✅ Backend script executed, verifying health...");
       
-      await sendTelegramMessage(
-        `🚀 *Deployment Successful*\n\n` +
-          `🧩 *Service:* Backend API\n` +
-          `🌍 *Environment:* Production\n` +
-          `🖥 *Server:* EC2 (${deployIp})\n\n` +
-          `📦 *Repository:* ${repoName}\n` +
-          `🌿 *Branch:* ${branch}\n` +
-          `🔖 *Commit:* [${shortHash}](${commitUrl})\n` +
-          `✍️ *Author:* ${author}\n` +
-          `📝 *Message:* ${commitMsg}\n\n` +
-          `⏱ *Duration:* ${duration}s\n` +
-          `❤️ *Health Check:* [/health](https://api.cloudvault.cloud/health) → 200 OK\n\n` +
-          `🟢 *Status:* LIVE`
-      );
-      res.send("✅ Backend deployed");
+      try {
+        await verifyHealth(targetUrl);
+
+        console.log("✅ Backend deployed and healthy:", stdout);
+      
+        await sendTelegramMessage(
+          `🚀 *Deployment Successful*\n\n` +
+            `🧩 *Service:* Backend API\n` +
+            `🌍 *Environment:* Production\n` +
+            `🖥 *Server:* EC2 (${deployIp})\n\n` +
+            `📦 *Repository:* ${repoName}\n` +
+            `🌿 *Branch:* ${branch}\n` +
+            `🔖 *Commit:* [${shortHash}](${commitUrl})\n` +
+            `✍️ *Author:* ${author}\n` +
+            `📝 *Message:* ${commitMsg}\n\n` +
+            `⏱ *Duration:* ${duration}s\n` +
+            `❤️ *Health Check:* [api.cloudvault.cloud](${targetUrl}) → 200 OK\n\n` +
+            `🟢 *Status:* LIVE`
+        );
+        res.send("✅ Backend deployed and healthy");
+
+      } catch (healthError) {
+        console.error("❌ Backend health check failed:", healthError.message);
+        await sendTelegramMessage(
+          `🔴 *Backend Deployment Verified Failed*\n\n` +
+            `🧩 *Service:* Backend API\n` +
+            `📦 *Repository:* ${repoName}\n` +
+            `⏱ *Duration:* ${duration}s\n` +
+            `❌ *Error:* Health check failed.\nApp at ${targetUrl} did not respond with 200 OK.`
+        );
+        res.status(500).send("Deployed but health check failed");
+      }
     }
   );
 };
