@@ -4,7 +4,7 @@ set -e
 APP_DIR="/home/ubuntu/Personal-Cloud-Drive-Backend-PM2"
 PM2_NAME="StorageApp"
 
-# Save state
+# 1. Protection: Save current state
 cd "$APP_DIR"
 git rev-parse HEAD > .git/LAST_GOOD_COMMIT
 CURRENT_HASH=$(cat .git/LAST_GOOD_COMMIT)
@@ -26,7 +26,7 @@ rollback() {
 
 trap 'rollback' ERR
 
-# Deployment Logic
+# 2. Deployment
 echo "Deploying Backend..."
 git pull origin main
 
@@ -40,6 +40,7 @@ echo "Reloading PM2..."
 /usr/local/nodejs/bin/pm2 reload "$PM2_NAME"
 sudo systemctl reload nginx
 
-echo "✅ Success"
+# 3. Cleanup
 cd "$APP_DIR"
 rm -f .git/LAST_GOOD_COMMIT
+echo "✅ Success"

@@ -3,8 +3,8 @@ set -e
 
 PROJECT_DIR="/home/ubuntu/Personal-Cloud-Drive-Frontend"
 DIST_DIR="$PROJECT_DIR/dist"
-S3_BUCKET="s3://storageapp-frontend-s3-bucket"
-CF_DIST_ID="E3FVNJY6OALVUD"
+S3_BUCKET=""
+CF_DIST_ID=""
 
 cd "$PROJECT_DIR"
 
@@ -20,8 +20,14 @@ rollback() {
     git reset --hard "$PREV_COMMIT"
     npm ci
     npm run build
-    aws s3 sync "$DIST_DIR" "$S3_BUCKET" --delete
-    aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths "//index.html"
+    
+    if [ -n "$S3_BUCKET" ]; then
+        aws s3 sync "$DIST_DIR" "$S3_BUCKET" --delete
+    fi
+    if [ -n "$CF_DIST_ID" ]; then
+        aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths "//index.html"
+    fi
+    
     echo "✅ Rollback complete."
     exit 1
 }
@@ -43,10 +49,14 @@ fi
 echo "Building..."
 npm run build
 
-echo "Syncing to S3..."
-aws s3 sync "$DIST_DIR" "$S3_BUCKET" --delete
+if [ -n "$S3_BUCKET" ]; then
+    echo "Syncing to S3..."
+    aws s3 sync "$DIST_DIR" "$S3_BUCKET" --delete
+fi
 
-echo "Invalidating CloudFront..."
-aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths "//index.html"
+if [ -n "$CF_DIST_ID" ]; then
+    echo "Invalidating CloudFront..."
+    aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths "//index.html"
+fi
 
 echo "✅ Success"

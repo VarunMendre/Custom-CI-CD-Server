@@ -11,20 +11,19 @@ export const frontendWebhook = (req, res) => {
   const shortHash = head_commit ? head_commit.id.substring(0, 7) : "n/a";
   const commitUrl = head_commit ? head_commit.url : "#";
 
-  console.log(`🔥 Frontend webhook received: ${branch} - ${commitMsg} by ${author}`);
+  console.log(`🔥 Frontend Deploy: ${branch} - ${commitMsg}`);
 
   const deployUser = process.env.DEPLOY_SERVER_USER;
   const deployIp = process.env.DEPLOY_SERVER_IP;
   const startTime = Date.now();
   const targetUrl = "https://cloudvault.cloud";
 
-  // Initial notification
   sendTelegramMessage(
     `🚀 *Frontend Deployment Started*\n\n` +
-    `📦 *Repository:* ${repoName}\n` +
-    `🌿 *Branch:* \`${branch}\`\n` +
-    `✍️ *Author:* ${author}\n` +
-    `📝 *Message:* ${commitMsg}`
+      `📦 *Repo:* ${repoName}\n` +
+      `🌿 *Branch:* \`${branch}\`\n` +
+      `✍️ *Author:* ${author}\n` +
+      `📝 *Commit:* ${commitMsg}`
   );
 
   exec(
@@ -35,10 +34,9 @@ export const frontendWebhook = (req, res) => {
       if (err) {
         console.error("❌ Frontend deploy failed:", stderr);
 
-        // Check if our script triggered a rollback
         const isRollback = stdout.includes("Rollback Complete");
         const statusText = isRollback 
-          ? `🛡️ *Auto-Rollback:* ✅ SUCCESS (Site restored to previous version)` 
+          ? `🛡️ *Auto-Rollback:* ✅ SUCCESS (Site restored)` 
           : `⚠️ *Status:* FAILED (Manual intervention required)`;
 
         await sendTelegramMessage(
@@ -46,42 +44,28 @@ export const frontendWebhook = (req, res) => {
             `❌ *Error:* \`${stderr || err.message || "Script failed"}\`\n\n` +
             `${statusText}`
         );
-        return res.status(500).send("Frontend deploy failed");
+        return res.status(500).send("Deploy failed");
       }
 
-      console.log("✅ Frontend script executed, verifying health...");
-
       try {
-        await verifyHealth(targetUrl); // Verify deployment
-
-        console.log("✅ Frontend deployed and healthy:", stdout);
-
+        await verifyHealth(targetUrl);
         await sendTelegramMessage(
           `🚀 *Deployment Successful*\n\n` +
-          `🧩 *Service:* Frontend Web\n` +
-          `🌍 *Environment:* Production\n` +
-          `🖥 *Server:* EC2 (${deployIp})\n\n` +
-          `📦 *Repository:* ${repoName}\n` +
-          `🌿 *Branch:* ${branch}\n` +
-          `🔖 *Commit:* [${shortHash}](${commitUrl})\n` +
-          `✍️ *Author:* ${author}\n` +
-          `📝 *Message:* ${commitMsg}\n\n` +
-          `⏱ *Duration:* ${duration}s\n` +
-          `❤️ *Health Check:* [cloudvault.cloud](${targetUrl}) → 200 OK\n\n` +
-          `🟢 *Status:* LIVE`
+            `🧩 *Service:* Frontend Web\n` +
+            `📦 *Repo:* ${repoName}\n` +
+            `🌿 *Branch:* ${branch}\n` +
+            `🔖 *Commit:* [${shortHash}](${commitUrl})\n` +
+            `⏱ *Time:* ${duration}s\n` +
+            `🟢 *Status:* LIVE`
         );
-        res.send("✅ Frontend deployed and healthy");
-
+        res.send("Deployed & Healthy");
       } catch (healthError) {
-        console.error("❌ Frontend health check failed:", healthError.message);
+        console.error("❌ Health check failed");
         await sendTelegramMessage(
-          `🔴 *Frontend Deployment Verified Failed*\n\n` +
-          `🧩 *Service:* Frontend Web\n` +
-          `📦 *Repository:* ${repoName}\n` +
-          `⏱ *Duration:* ${duration}s\n` +
-          `❌ *Error:* Health check failed.\nApp deployed but not responding at ${targetUrl}.`
+          `🔴 *Frontend Verified Failed*\n\n` +
+            `❌ *Error:* Health check failed at ${targetUrl}`
         );
-        res.status(500).send("Deployed but health check failed");
+        res.status(500).send("Health check failed");
       }
     }
   );
